@@ -4,6 +4,7 @@ import os
 import pika
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel
 
 
 app = FastAPI()
@@ -28,3 +29,29 @@ async def jwt_validation(token: str):
         return payload
     except jwt.DecodeError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+# Models
+class GenerateUserToken(BaseModel):
+    username: str
+    password: str
+
+
+class UserCredentials(BaseModel):
+    username: str
+    password: str
+
+
+class UserRegistration(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class GenerateOtp(BaseModel):
+    email: str
+
+
+class VerifyOtp(BaseModel):
+    email: str
+    otp: str
