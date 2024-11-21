@@ -2,6 +2,7 @@ import jwt
 import logging
 import os
 import pika
+import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
@@ -55,3 +56,19 @@ class GenerateOtp(BaseModel):
 class VerifyOtp(BaseModel):
     email: str
     otp: str
+
+
+# Auth Endpoints
+@app.post("auth/login", tags=["Authentication Service"])
+async def login(user_data: UserCredentials):
+    try:
+        response = requests.post(f"{AUTH_BASE_URL}/api/token", json={
+            "username": user_data.username, "password": user_data.password})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code,
+                                detail=response.json())
+    except requests.ConnectionError:
+        raise HTTPException(status_code=503,
+                            detail="Authentication service is down.")
