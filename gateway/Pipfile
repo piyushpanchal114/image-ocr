@@ -9,6 +9,7 @@ uvicorn = "*"
 pika = "*"
 pyjwt = "*"
 pydantic = "*"
+requests = "*"
 
 [dev-packages]
 
