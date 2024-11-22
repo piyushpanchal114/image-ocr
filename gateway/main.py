@@ -16,8 +16,12 @@ logging.basicConfig(level=logging.INFO)
 JWT_SECRET = os.environ.get("JWT_SECRET")
 AUTH_BASE_URL = os.environ.get("AUTH_BASE_URL")
 RABBITMQ_URL = os.environ.get("RABBITMQ_URL")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER")
+RABBITMQ_PASSWORD = os.environ.get("RABBITMQ_PASSWORD")
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_URL))
+credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(host=RABBITMQ_URL, credentials=credentials))
 channel = connection.channel()
 channel.queue_declare(queue="gateway_service")
 channel.queue_declare(queue="ocr_service")
