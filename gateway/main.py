@@ -93,3 +93,18 @@ async def register(user_data: UserRegistration):
     except requests.ConnectionError:
         raise HTTPException(status_code=503,
                             detail="Authentication service is down.")
+
+
+@app.post("/auth/generate-otp", tags=["Authentication Service"])
+def generate_otp(user_data: GenerateOtp):
+    try:
+        response = requests.post(f"{AUTH_BASE_URL}/api/users/generate-otp",
+                                 json={"email": user_data.email})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code,
+                                detail=response.json())
+    except requests.ConnectionError:
+        raise HTTPException(status_code=503,
+                            detail="Authentication service is down.")
