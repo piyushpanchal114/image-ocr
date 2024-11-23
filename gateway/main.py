@@ -108,3 +108,19 @@ def generate_otp(user_data: GenerateOtp):
     except requests.ConnectionError:
         raise HTTPException(status_code=503,
                             detail="Authentication service is down.")
+
+
+@app.post("/auth/verify-otp", tags=["Authentication Service"])
+def verify_otp(user_data: VerifyOtp):
+    try:
+        response = requests.post(f"{AUTH_BASE_URL}/api/users/verify-otp",
+                                 json={"email": user_data.email,
+                                       "otp": user_data.otp})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code,
+                                detail=response.json())
+    except requests.ConnectionError:
+        raise HTTPException(status_code=503,
+                            detail="Authentication service is down.")
