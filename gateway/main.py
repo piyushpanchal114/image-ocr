@@ -1,9 +1,12 @@
+import base64
+import fastapi as _fastapi
 import jwt
 import logging
 import os
 import pika
 import requests
-from fastapi import FastAPI, HTTPException
+import rpc_client
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
@@ -27,7 +30,7 @@ channel.queue_declare(queue="gateway_service")
 channel.queue_declare(queue="ocr_service")
 
 
-async def jwt_validation(token: str):
+async def jwt_validation(token: str = _fastapi.Depends(oauth2_scheme)):
     """Validate JWT token"""
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
@@ -124,3 +127,35 @@ def verify_otp(user_data: VerifyOtp):
     except requests.ConnectionError:
         raise HTTPException(status_code=503,
                             detail="Authentication service is down.")
+
+
+# OCR/ML Endpoints
+
+@app.post("/ocr", tags=["Machine Learning Service"])
+def ocr(file: UploadFile = File(...),
+        payload: dict = _fastapi.Depends(oauth2_scheme)):
+    with open(file.filename, "rb") as buffer:
+        buffer.write(file.file.read())
+
+    ocr_rpc = rpc_client.OcrRpcClient()
+
+    with open(file.filename, "rb") as buffer:
+        file_data = buffer.read()
+        file_base64 = base64.b64encode(file_data).decode()
+
+    request_json = {
+        "user_name": payload["name"],
+        "user_email": payload["email"],
+        "user_id": payload["id"],
+        "file": file_base64
+    }
+
+    response = ocr_rpc.call(request_json)
+
+    os.remove(file.filename)
+    return response
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=5001, reload=True)
