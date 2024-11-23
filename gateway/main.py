@@ -76,3 +76,20 @@ async def login(user_data: UserCredentials):
     except requests.ConnectionError:
         raise HTTPException(status_code=503,
                             detail="Authentication service is down.")
+
+
+@app.post("auth/register", tags=["Authentication Service"])
+async def register(user_data: UserRegistration):
+    try:
+        response = requests.post(
+            f"{AUTH_BASE_URL}/api/users",
+            json={"name": user_data.name, "email": user_data.email,
+                  "password": user_data.password})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code,
+                                detail=response.json())
+    except requests.ConnectionError:
+        raise HTTPException(status_code=503,
+                            detail="Authentication service is down.")
