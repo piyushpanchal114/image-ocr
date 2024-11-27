@@ -5,7 +5,6 @@ import pika
 import sqlalchemy.orm as _orm
 
 import database as _database
-import models as _models
 import schemas as _schemas
 import service as _services
 
@@ -54,3 +53,24 @@ async def create_user(
 @app.get("/check_api")
 async def check_api():
     return {"status": "Connected to API Successfully"}
+
+
+@app.post("/api/token", tags=["User Auth"])
+async def generate_token(
+    user_data: _schemas.GenerateUserToken,
+        db: _orm.Session = _fastapi.Depends(_services.get_db)):
+    user = await _services.authenticate_user(
+        email=user_data.username, password=user_data.password, db=db)
+
+    if user == "is_verified_false":
+        logging.info('Email verification is pending.')
+        raise _fastapi.HTTPException(
+            status_code=403, detail="Email verification is pending.")
+
+    if not user:
+        logging.info('Invalid Credentials')
+        raise _fastapi.HTTPException(
+            status_code=401, detail="Invalid Credentials")
+
+    logging.info('JWT Token Generated')
+    return await _services.create_token(user=user)
