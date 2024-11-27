@@ -74,3 +74,9 @@ async def generate_token(
 
     logging.info('JWT Token Generated')
     return await _services.create_token(user=user)
+
+
+@app.get("/api/users/me", response_model=_schemas.User, tags=["User Auth"])
+async def get_user(
+        user: _schemas.User = _fastapi.Depends(_services.get_current_user)):
+    return user
