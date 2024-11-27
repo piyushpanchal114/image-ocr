@@ -6,6 +6,14 @@ name = "pypi"
 [packages]
 pika = "*"
 sqlalchemy = "*"
+passlib = "*"
+email-validator = "*"
+uvicorn = "*"
+fastapi = "*"
+psycopg2-binary = "*"
+pytz = "*"
+typing-extensions = "*"
+pyjwt = "*"
 
 [dev-packages]
 
