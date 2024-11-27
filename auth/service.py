@@ -3,6 +3,7 @@ import fastapi as _fastapi
 import fastapi.security as _security
 
 import email_validator as _email_check
+import jwt
 import passlib.hash as _hash
 import sqlalchemy.orm as _orm
 
@@ -66,3 +67,11 @@ async def authenticate_user(email: str, password: str, db: _orm.Session):
         return False
 
     return user
+
+
+async def create_token(user: _models.User):
+    user_obj = _schemas.User.model_validate(user)
+    user_dict = user_obj.model_dump()
+    del user_dict["date_created"]
+    token = jwt.encode(user_dict, JWT_SECRET, algorithm="HS256")
+    return dict(access_token=token, token_type="bearer")
