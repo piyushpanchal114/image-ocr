@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import time
@@ -104,3 +105,36 @@ def connect_to_rabbitmq():
         except pika.exceptions.AMQPConnectionError:
             print("Connection to RabbitMQ failed. Retrying in 5 seconds...")
             time.sleep(5)
+
+
+def send_otp(email, otp, channel):
+    connection = connect_to_rabbitmq()
+    channel = connection.channel()
+    message = {
+        "email": email,
+        "subject": "Verify your email",
+        "other": "null",
+        "body": f"Your OTP is {otp}"
+    }
+    try:
+        queue_declare_ok = channel.queue_declare(
+            queue="email_notification", passive=True)
+        current_durable = queue_declare_ok.method.queue
+
+        if current_durable:
+            if queue_declare_ok.method.queue != current_durable:
+                channel.queue_delete(queue="email_notification")
+                channel.queue_declare(queue="email_notification", durable=True)
+
+        channel.basic_publish(
+            exchange="", routing_key="email_notification",
+            body=json.dumps(message),
+            properties=pika.BasicProperties(
+                delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE))
+
+        print("Email sent successfully")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+    finally:
+        channel.close()
+        connection.close()
