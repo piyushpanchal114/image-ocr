@@ -1,4 +1,5 @@
 import os
+import random
 import fastapi as _fastapi
 import fastapi.security as _security
 
@@ -75,3 +76,18 @@ async def create_token(user: _models.User):
     del user_dict["date_created"]
     token = jwt.encode(user_dict, JWT_SECRET, algorithm="HS256")
     return dict(access_token=token, token_type="bearer")
+
+
+async def get_current_user(db: _orm.Session = _fastapi.Depends(get_db),
+                           token: str = _fastapi.Depends(oauth2schema)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user = db.query(_models.User).get(payload["id"])
+    except Exception:
+        raise _fastapi.HTTPException(status_code=401, detail="Invalid token")
+    return _schemas.User.model_validate(user)
+
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
