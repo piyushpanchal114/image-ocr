@@ -1,11 +1,14 @@
 import os
 import random
+import time
+
 import fastapi as _fastapi
 import fastapi.security as _security
 
 import email_validator as _email_check
 import jwt
 import passlib.hash as _hash
+import pika
 import sqlalchemy.orm as _orm
 
 import database as _database
@@ -91,3 +94,13 @@ async def get_current_user(db: _orm.Session = _fastapi.Depends(get_db),
 def generate_otp():
     return str(random.randint(100000, 999999))
 
+
+def connect_to_rabbitmq():
+    while True:
+        try:
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(RABBITMQ_URL))
+            return connection
+        except pika.exceptions.AMQPConnectionError:
+            print("Connection to RabbitMQ failed. Retrying in 5 seconds...")
+            time.sleep(5)
