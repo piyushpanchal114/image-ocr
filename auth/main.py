@@ -32,7 +32,7 @@ def get_db():
 
 app = _fastapi.FastAPI()
 logging.basicConfig(level=logging.INFO)
-_models.Base.metadata.create_all(_models.engine)
+_database.Base.metadata.create_all(_database.engine)
 
 
 @app.post("/api/users", tags=["User Auth"])
@@ -49,3 +49,8 @@ async def create_user(
     user = await _services.create_user(user, db)
     return _fastapi.HTTPException(
         status_code=201, detail="User Registered Successfully")
+
+
+@app.get("/check_api")
+async def check_api():
+    return {"status": "Connected to API Successfully"}
