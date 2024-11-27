@@ -1,3 +1,4 @@
+import pytz
 import database as _database
 import datetime as _dt
 import passlib.hash as _hash
@@ -15,7 +16,7 @@ class User(_database.Base):
     hashed_password = _sql.Column(_sql.String)
     addresses = _orm.relationship("Address", back_populates="user")
     date_created = _sql.Column(
-        _sql.DateTime, default=_dt.datetime.now(timezone=_dt.timezone.utc))
+        _sql.DateTime, default=_dt.datetime.now(pytz.utc))
 
     def verify_password(self, password: str):
         return _hash.bcrypt.verify(password, self.hashed_password)
